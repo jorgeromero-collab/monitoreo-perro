@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de Monitoreo de Fauna</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a2e; color: white; margin: 0; padding: 20px; }
+        h1 { text-align: center; color: #4ecca3; margin-bottom: 20px; }
+        .dashboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
+        .card { background: #16213e; padding: 15px; border-radius: 15px; text-align: center; border-bottom: 5px solid #0f3460; position: relative; }
+        .val { font-size: 2.2em; font-weight: bold; color: #4ecca3; margin: 5px 0; }
+        .label { color: #8e94a5; text-transform: uppercase; font-size: 0.8em; letter-spacing: 1px; }
+
+        /* Banner de Peligro */
+        #danger-banner { 
+            display: none; background: #e74c3c; color: white; text-align: center; 
+            padding: 15px; border-radius: 10px; margin-bottom: 15px; font-weight: bold;
+            animation: pulse-red 1s infinite;
+        }
+        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(231, 76, 60, 0); } 100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); } }
+
+        /* Indicador de Estados Actividad */
+        #status-pill { margin-top: 10px; padding: 8px 15px; border-radius: 20px; font-size: 0.85em; font-weight: bold; display: inline-flex; align-items: center; gap: 8px; background: #2c3e50; }
+        .pill-sleeping { background: #3498db !important; }
+        .pill-sitting { background: #e67e22 !important; }
+        .pill-active { background: #2ecc71 !important; }
+
+        .status-bar { position: absolute; top: 20px; right: 30px; display: flex; gap: 15px; background: rgba(22, 33, 62, 0.8); padding: 10px 20px; border-radius: 30px; border: 1px solid #4ecca3; z-index: 1000; }
+        #map { height: 400px; width: 100%; border-radius: 15px; }
+        .heart-beat { color: #e74c3c; animation: beat .25s infinite alternate; display: inline-block; }
+        @keyframes beat { to { transform: scale(1.2); } }
+
+        .log-container { background: #16213e; padding: 15px; border-radius: 15px; margin-top: 15px; max-height: 150px; overflow-y: auto; border: 1px solid #0f3460; }
+        .log-entry { border-left: 4px solid #e74c3c; padding: 5px 10px; margin-bottom: 5px; background: rgba(231, 76, 60, 0.1); font-size: 0.9em; }
+    </style>
+</head>
+<body>
+
+    <div id="danger-banner">
+        <i class="fas fa-exclamation-triangle"></i> ¡ATENCIÓN! SIGNOS DE PELIGRO: <span id="danger-msg"></span>
+    </div>
+
+    <div class="status-bar">
+        <div class="status-item"><i class="fas fa-signal"></i> <span id="sig-val">Conectando...</span></div>
+        <div class="status-item"><i id="batt-icon" class="fas fa-battery-full"></i> <span id="batt-val">--%</span></div>
+    </div>
+
+    <h1>🐾 Monitoreo de Fauna</h1>
+
+    <div class="dashboard">
+        <div class="card">
+            <div class="label">Ritmo Cardíaco</div>
+            <div id="bpm_val" class="val">--</div>
+            <div style="color: #e74c3c;"><span class="heart-beat">❤</span> BPM</div>
+        </div>
+
+        <div class="card">
+            <div class="label">Actividad Física</div>
+            <div id="mov_texto" class="val">--</div>
+            <div id="fuerza_g" style="font-size: 0.8em; color: #8e94a5;">-- m/s²</div>
+            <div id="status-pill">
+                <i id="status-icon" class="fas fa-question"></i> <span id="status-text">Detectando...</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="label">Ubicación Actual</div>
+            <div id="coords" class="val" style="font-size: 1.3em;">-- , --</div>
+            <div id="sat_status" style="font-size: 0.8em; color: #4ecca3;">GPS Sincronizando...</div>
+        </div>
+    </div>
+
+    <div id="map"></div>
+
+    <div class="log-container" id="alert-log">
+        <div style="color: #8e94a5; font-size: 0.8em; margin-bottom: 10px;">HISTORIAL DE ALERTAS CRÍTICAS</div>
+    </div>
+
+    <script>
+        const username = "JorgeUNL";
+        const aio_key = "aio_tvHs14vzX5YkVkOWA3TL2l13rwhs";
+        const BASE_URL = `https://io.adafruit.com/api/v2/${username}/feeds/`;
+
+        var map = L.map('map').setView([-4.0284, -79.2072], 16);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        var marker = L.marker([-4.0284, -79.2072]).addTo(map);
+
+        async function fetchLast(feed) {
+            try {
+                const res = await fetch(BASE_URL + feed + "/data/last", { headers: {"X-AIO-Key": aio_key} });
+                if (!res.ok) return null;
+                const json = await res.json();
+                return json.value;
+            } catch(e) { return null; }
+        }
+
+        // FUNCIÓN PARA DISPARAR ALERTAS VISUALES
+        function triggerAlert(msg) {
+            const banner = document.getElementById('danger-banner');
+            const msgSpan = document.getElementById('danger-msg');
+            const log = document.getElementById('alert-log');
+            
+            banner.style.display = 'block';
+            msgSpan.innerText = msg;
+
+            // Evitar duplicados en el log en el mismo minuto
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const lastEntry = log.firstChild ? log.firstChild.innerText : "";
+            if (!lastEntry.includes(msg)) {
+                const entry = document.createElement('div');
+                entry.className = 'log-entry';
+                entry.innerHTML = `<strong>[${time}]</strong> ${msg}`;
+                log.insertBefore(entry, log.childNodes[1]);
+            }
+        }
+
+        async function update() {
+            const [lat, lng, bpm, bat, sig, act] = await Promise.all([
+                fetchLast("latitud"), fetchLast("longitud"), fetchLast("pulso"),
+                fetchLast("bateria"), fetchLast("senal"), fetchLast("actividad")
+            ]);
+
+            // Limpiar banner antes de evaluar
+            document.getElementById('danger-banner').style.display = 'none';
+
+            if(sig !== null) document.getElementById('sig-val').innerText = sig + " dBm";
+            
+            if(bat !== null) {
+                document.getElementById('batt-val').innerText = bat + "%";
+                const bIcon = document.getElementById('batt-icon');
+                const b = parseInt(bat);
+                bIcon.className = b < 20 ? "fas fa-battery-quarter" : b < 60 ? "fas fa-battery-half" : "fas fa-battery-full";
+            }
+
+            if(bpm !== null) {
+                const b = parseInt(bpm);
+                document.getElementById('bpm_val').innerText = b;
+                // ALERTAS DE PULSO
+                if(b > 160) triggerAlert("TAQUICARDIA DETECTADA");
+                if(b < 40 && b > 0) triggerAlert("PULSO MUY BAJO / DESMAYO");
+            }
+
+            if(act !== null) {
+                const mag = parseFloat(act);
+                document.getElementById('fuerza_g').innerText = mag.toFixed(2) + " m/s²";
+                const pill = document.getElementById('status-pill');
+                const icon = document.getElementById('status-icon');
+                const txt = document.getElementById('status-text');
+                const movTxt = document.getElementById('mov_texto');
+
+                // ALERTA DE IMPACTO (Sincronizado con el > 40.0 del Arduino)
+                if (mag > 38.0) triggerAlert("IMPACTO FUERTE / CAÍDA");
+
+                if (mag > 12.5) {
+                    movTxt.innerText = "ACTIVO";
+                    pill.className = "pill-active"; icon.className = "fas fa-running"; txt.innerText = "Caminando";
+                } else if (mag > 10.2) {
+                    movTxt.innerText = "SENTADO";
+                    pill.className = "pill-sitting"; icon.className = "fas fa-dog"; txt.innerText = "Alerta";
+                } else {
+                    movTxt.innerText = "REPOSO";
+                    pill.className = "pill-sleeping"; icon.className = "fas fa-moon"; txt.innerText = "Durmiendo";
+                }
+            }
+
+            if(lat !== null && lng !== null) {
+                const l1 = parseFloat(lat);
+                const l2 = parseFloat(lng);
+                document.getElementById('coords').innerText = l1.toFixed(4) + ", " + l2.toFixed(4);
+                document.getElementById('sat_status').innerText = "GPS Conectado ✅";
+                marker.setLatLng([l1, l2]);
+                map.panTo([l1, l2]);
+            }
+        }
+
+        setInterval(update, 5000);
+        update();
+    </script>
+</body>
+</html>
