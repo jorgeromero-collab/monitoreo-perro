@@ -3,20 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FaunaGuard PRO | Monitor de Fauna</title>
+    <title>FaunaGuard PRO | Universidad Nacional de Loja</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         :root {
-            --primary: #10b981;    /* Verde esmeralda tecnológico */
-            --bg: #f1f5f9;         /* Gris muy claro (claro pero no blanco puro) */
-            --card: #ffffff;       /* Tarjetas blancas puras */
-            --danger: #ef4444;     /* Rojo alerta */
-            --text-main: #1e293b;  /* Texto azul oscuro profundo */
-            --text-dim: #64748b;   /* Texto secundario */
+            --primary: #10b981;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --danger: #ef4444;
+            --text-main: #1e293b;
+            --text-dim: #64748b;
         }
 
         body { 
@@ -34,55 +35,46 @@
             flex-direction: column; align-items: center; justify-content: center;
         }
         .login-box { 
-            background: var(--card); 
-            padding: 40px; 
-            border-radius: 24px; 
-            text-align: center; 
-            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
-            border: 1px solid rgba(0,0,0,0.05);
+            background: var(--card); padding: 40px; border-radius: 24px; 
+            text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
         }
-        input { 
-            padding: 12px; border-radius: 10px; border: 1px solid #ddd; 
-            margin: 15px; width: 220px; text-align: center; font-size: 1rem;
-        }
-        button { 
-            background: var(--primary); color: white; border: none; 
-            padding: 12px 30px; border-radius: 10px; cursor: pointer; 
-            font-weight: bold; transition: 0.3s;
-        }
-        button:hover { opacity: 0.9; transform: scale(1.05); }
+        input { padding: 12px; border-radius: 10px; border: 1px solid #ddd; margin: 15px; width: 220px; text-align: center; }
+        button { background: var(--primary); color: white; border: none; padding: 12px 30px; border-radius: 10px; cursor: pointer; font-weight: bold; }
 
-        /* Banner de Alerta */
+        /* Banner Alerta */
         #danger-banner { 
             display: none; background: var(--danger); color: white; padding: 15px; 
-            border-radius: 12px; margin-bottom: 20px; font-weight: bold; 
-            text-align: center; box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.3);
+            border-radius: 12px; margin-bottom: 20px; font-weight: bold; text-align: center;
             animation: pulse 1.5s infinite;
         }
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
 
         header {
             display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 25px; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px;
+            margin-bottom: 25px; border-bottom: 2px solid var(--primary); padding-bottom: 15px;
         }
 
         .dashboard { 
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
-            gap: 20px; margin-bottom: 25px; 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+            gap: 20px; 
+            margin-bottom: 25px; 
         }
         
         .card { 
             background: var(--card); padding: 25px; border-radius: 20px; 
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-            text-align: center; border: 1px solid rgba(0,0,0,0.03);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); text-align: center;
         }
-        
-        .val { font-size: 2.8em; font-weight: 800; color: var(--text-main); margin: 10px 0; }
-        .label { color: var(--text-dim); text-transform: uppercase; font-size: 0.8em; font-weight: 700; letter-spacing: 1px; }
 
-        /* Estados Actividad */
+        /* Tarjeta de Gráfica (Ocupa más espacio en pantallas grandes) */
+        .chart-card { grid-column: span 1; }
+        @media (min-width: 900px) { .chart-card { grid-column: span 2; } }
+        
+        .val { font-size: 2.8em; font-weight: 800; color: var(--text-main); margin: 5px 0; }
+        .label { color: var(--text-dim); text-transform: uppercase; font-size: 0.75em; font-weight: 700; letter-spacing: 1px; }
+
         #status-pill { 
-            margin-top: 15px; padding: 8px 16px; border-radius: 30px; 
+            margin-top: 10px; padding: 8px 16px; border-radius: 30px; 
             font-size: 0.9em; font-weight: 600; color: white;
             display: inline-flex; align-items: center; gap: 8px; 
         }
@@ -90,18 +82,17 @@
         .pill-sitting { background: #f59e0b; }
         .pill-active { background: #10b981; }
 
-        #map { 
-            height: 500px; width: 100%; border-radius: 24px; 
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
-            border: 4px solid var(--card);
-        }
+        #map { height: 450px; width: 100%; border-radius: 24px; border: 4px solid var(--card); margin-bottom: 20px;}
 
-        .status-info { display: flex; gap: 15px; color: var(--text-dim); font-weight: 600; }
-        .status-info i { color: var(--primary); }
+        footer {
+            background: var(--card); padding: 25px; border-radius: 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            color: var(--text-dim); font-size: 0.9em; border: 1px solid #e2e8f0;
+        }
 
         .fab { 
             position: fixed; bottom: 30px; right: 30px; background: var(--primary); 
-            width: 60px; height: 60px; border-radius: 20px; 
+            width: 60px; height: 60px; border-radius: 50%; 
             display: flex; align-items: center; justify-content: center; 
             cursor: pointer; box-shadow: 0 10px 15px rgba(16, 185, 129, 0.3); z-index: 1000;
         }
@@ -111,27 +102,26 @@
 
     <div id="login-overlay">
         <div class="login-box">
-            <i class="fas fa-paw fa-3x" style="color: var(--primary); margin-bottom: 20px;"></i>
-            <h2 style="margin:0; color: var(--text-main);">Panel de Control</h2>
-            <p style="color: var(--text-dim);">Proyecto de Monitoreo - UNL</p>
-            <input type="password" id="pass" placeholder="Ingrese PIN">
+            <i class="fas fa-user-shield fa-3x" style="color: var(--primary); margin-bottom: 20px;"></i>
+            <h2>Sistema de Monitoreo UNL</h2>
+            <input type="password" id="pass" placeholder="PIN de Acceso">
             <br>
-            <button onclick="checkPass()">INICIAR SESIÓN</button>
+            <button onclick="checkPass()">DESBLOQUEAR</button>
         </div>
     </div>
 
     <div id="danger-banner">
-        <i class="fas fa-exclamation-circle"></i> NOTIFICACIÓN CRÍTICA: <span id="danger-msg">---</span>
+        <i class="fas fa-exclamation-triangle"></i> EVENTO CRÍTICO DETECTADO: <span id="danger-msg">---</span>
     </div>
 
     <header>
         <div>
-            <h1 style="color: var(--text-main);">FaunaGuard <span style="color: var(--primary);">UNL</span></h1>
-            <div style="color: var(--text-dim); font-size: 0.9em;">Monitoreo Satelital de Especies</div>
+            <h1 style="margin:0;">FaunaGuard <span style="color: var(--primary);">PRO</span></h1>
+            <small>Loja, Ecuador | <span id="live-clock">--:--:--</span></small>
         </div>
-        <div class="status-info">
-            <span><i class="fas fa-signal"></i> <span id="sig-val">...</span></span>
-            <span><i class="fas fa-battery-three-quarters"></i> <span id="batt-val">--%</span></span>
+        <div style="text-align: right;">
+            <i class="fas fa-signal" style="color: var(--primary);"></i> <span id="sig-val">...</span><br>
+            <i class="fas fa-battery-three-quarters" style="color: var(--primary);"></i> <span id="batt-val">--%</span>
         </div>
     </header>
 
@@ -139,7 +129,7 @@
         <div class="card">
             <div class="label">Frecuencia Cardíaca</div>
             <div id="bpm_val" class="val">--</div>
-            <div style="color: var(--danger); font-weight: bold;"><i class="fas fa-heart"></i> Latidos por minuto</div>
+            <div style="color: var(--danger); font-weight: bold;"><i class="fas fa-heartbeat"></i> BPM</div>
         </div>
 
         <div class="card">
@@ -150,54 +140,88 @@
             </div>
         </div>
 
+        <div class="card chart-card">
+            <div class="label">Análisis de Tendencia (BPM)</div>
+            <canvas id="bpmChart" height="100"></canvas>
+        </div>
+
         <div class="card">
-            <div class="label">Ubicación Actual</div>
+            <div class="label">Localización GPS</div>
             <div id="coords" class="val" style="font-size: 1.4em;">-- , --</div>
-            <div id="sat_status" style="color: var(--primary); font-size: 0.8em; font-weight: bold;">
-                <i class="fas fa-satellite"></i> Esperando señal GPS...
-            </div>
+            <div id="sat_status" style="color: var(--primary); font-size: 0.8em; font-weight: bold;">Sincronizando...</div>
         </div>
     </div>
 
     <div id="map"></div>
+
+    <footer>
+        <div>
+            <strong>INVESTIGADOR:</strong> JORGE ROMERO<br>
+            <strong>CARRERA:</strong> INGENIERÍA - UNL
+        </div>
+        <div style="text-align: right;">
+            <strong>MÓDULO:</strong> ESP32 + SIM7000G<br>
+            © 2024 Universidad Nacional de Loja
+        </div>
+    </footer>
 
     <div class="fab" onclick="update()">
         <i class="fas fa-sync-alt" style="color: white; font-size: 1.5em;"></i>
     </div>
 
     <script>
-        function checkPass() {
-            const p = document.getElementById('pass').value;
-            if(p === 'UNL2024') {
-                document.getElementById('login-overlay').style.display = 'none';
-                update();
-            } else { alert('PIN Incorrecto'); }
-        }
-
+        let chart;
         const username = "JorgeUNL";
         const aio_key = "aio_tvHs14vzX5YkVkOWA3TL2l13rwhs";
         const BASE_URL = `https://io.adafruit.com/api/v2/${username}/feeds/`;
 
-        // MAPA CLARO (Estilo OpenStreetMap con calles visibles)
+        function checkPass() {
+            if(document.getElementById('pass').value === 'UNL2024') {
+                document.getElementById('login-overlay').style.display = 'none';
+                initChart();
+                update();
+            } else { alert('PIN Incorrecto'); }
+        }
+
+        // Reloj en tiempo real
+        setInterval(() => {
+            document.getElementById('live-clock').innerText = new Date().toLocaleTimeString();
+        }, 1000);
+
+        // Inicializar Gráfica
+        function initChart() {
+            const ctx = document.getElementById('bpmChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Latidos por Minuto',
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        data: [],
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { min: 40, max: 180 }, x: { display: false } }
+                }
+            });
+        }
+
         var map = L.map('map').setView([-4.0284, -79.2072], 17);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap'
-        }).addTo(map);
-        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
         var marker = L.marker([-4.0284, -79.2072]).addTo(map);
 
         async function fetchLast(feed) {
             try {
                 const res = await fetch(BASE_URL + feed + "/data/last", { headers: {"X-AIO-Key": aio_key} });
-                if (!res.ok) return null;
                 const json = await res.json();
                 return json.value;
             } catch(e) { return null; }
-        }
-
-        function triggerAlert(msg) {
-            document.getElementById('danger-banner').style.display = 'block';
-            document.getElementById('danger-msg').innerText = msg;
         }
 
         async function update() {
@@ -214,41 +238,55 @@
             if(bpm) {
                 const b = parseInt(bpm);
                 document.getElementById('bpm_val').innerText = b;
-                if(b > 160) triggerAlert("ALERTA: RITMO CARDÍACO ELEVADO");
-                if(b < 40 && b > 0) triggerAlert("ALERTA: RITMO CARDÍACO BAJO");
+                // Actualizar Gráfica
+                if(chart) {
+                    chart.data.labels.push("");
+                    chart.data.datasets[0].data.push(b);
+                    if(chart.data.labels.length > 15) {
+                        chart.data.labels.shift();
+                        chart.data.datasets[0].data.shift();
+                    }
+                    chart.update();
+                }
+                if(b > 160) triggerAlert("TAQUICARDIA");
             }
 
             if(act) {
                 const mag = parseFloat(act);
                 const pill = document.getElementById('status-pill');
-                const icon = document.getElementById('status-icon');
                 const txt = document.getElementById('status-text');
                 const movTxt = document.getElementById('mov_texto');
 
-                if (mag > 38.0) triggerAlert("ALERTA: MOVIMIENTO BRUSCO / IMPACTO");
+                if (mag > 38.0) triggerAlert("IMPACTO DETECTADO");
 
                 if (mag > 12.5) {
-                    movTxt.innerText = "ACTIVO"; pill.className = "pill-active"; 
-                    icon.className = "fas fa-running"; txt.innerText = "Caminando";
+                    movTxt.innerText = "ACTIVO"; pill.className = "pill-active"; txt.innerText = "Caminando";
                 } else if (mag > 10.3) {
-                    movTxt.innerText = "ALERTA"; pill.className = "pill-sitting"; 
-                    icon.className = "fas fa-paw"; txt.innerText = "Estático";
+                    movTxt.innerText = "ALERTA"; pill.className = "pill-sitting"; txt.innerText = "Sentado";
                 } else {
-                    movTxt.innerText = "REPOSO"; pill.className = "pill-sleeping"; 
-                    icon.className = "fas fa-bed"; txt.innerText = "Descansando";
+                    movTxt.innerText = "REPOSO"; pill.className = "pill-sleeping"; txt.innerText = "Descansando";
                 }
             }
 
             if(lat && lng) {
                 const l1 = parseFloat(lat); const l2 = parseFloat(lng);
                 document.getElementById('coords').innerText = l1.toFixed(4) + ", " + l2.toFixed(4);
-                document.getElementById('sat_status').innerHTML = '<i class="fas fa-check-circle"></i> Ubicación Sincronizada';
+                document.getElementById('sat_status').innerText = "GPS OK ✅";
                 marker.setLatLng([l1, l2]);
                 map.panTo([l1, l2]);
             }
         }
 
-        setInterval(update, 10000); 
+        function triggerAlert(msg) {
+            document.getElementById('danger-banner').style.display = 'block';
+            document.getElementById('danger-msg').innerText = msg;
+        }
+
+        setInterval(update, 10000);
     </script>
 </body>
 </html>
+    </script>
+</body>
+</html>
+
