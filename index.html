@@ -17,24 +17,26 @@
             --card: #ffffff;
             --text-main: #1e293b;
             --text-dim: #64748b;
-            --dark-card: #111827; /* Para el estilo de la app de pulso */
+            --dark-card: #111827;
         }
 
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text-main); margin: 0; padding: 20px; }
 
-        /* Pantalla de Inicio */
+        /* Pantalla de Inicio - Ahora incluye tus datos aquí */
         #login-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center;
         }
         .login-box { 
-            background: var(--card); padding: 50px; border-radius: 30px; text-align: center;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 320px;
+            background: var(--card); padding: 40px; border-radius: 30px; text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 340px;
         }
-        .login-box i { color: var(--primary); font-size: 3.5rem; margin-bottom: 20px; }
+        .login-box i { color: var(--primary); font-size: 3rem; margin-bottom: 15px; }
+        .author-credits { font-size: 0.75rem; color: var(--text-dim); margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px; }
+        
         input { 
             padding: 12px; border-radius: 12px; border: 1.5px solid #e2e8f0; 
-            margin-bottom: 20px; width: 100%; text-align: center; font-size: 1rem; outline: none; box-sizing: border-box;
+            margin-bottom: 15px; width: 100%; text-align: center; font-size: 1rem; outline: none; box-sizing: border-box;
         }
         .btn-login { 
             background: var(--primary); color: white; border: none; padding: 12px; 
@@ -56,33 +58,25 @@
             border-radius: 24px; 
             box-shadow: 0 4px 6px rgba(0,0,0,0.02); 
             text-align: center;
-            min-height: 250px;
+            min-height: 220px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             overflow: hidden;
+            position: relative;
         }
 
-        /* Tarjeta Estilo App (BPM) */
-        .card-bpm { background: var(--dark-card); color: white; position: relative; }
+        .card-bpm { background: var(--dark-card); color: white; }
         .card-bpm .label { color: #94a3b8; }
-        .card-bpm .val { color: white; font-size: 3.5em; z-index: 2; }
-        .chart-wrapper { position: absolute; bottom: 0; left: 0; width: 100%; height: 120px; z-index: 1; }
+        .card-bpm .val { color: white; font-size: 3.5em; z-index: 2; margin: 0; }
+        .chart-wrapper { position: absolute; bottom: 0; left: 0; width: 100%; height: 100px; z-index: 1; }
 
-        .val { font-size: 2.5em; font-weight: 800; margin: 10px 0; }
-        .label { color: var(--text-dim); text-transform: uppercase; font-size: 0.75em; font-weight: 700; letter-spacing: 1px; }
+        .val { font-size: 2.2em; font-weight: 800; margin: 5px 0; }
+        .label { color: var(--text-dim); text-transform: uppercase; font-size: 0.7em; font-weight: 700; letter-spacing: 1px; }
 
-        #map { height: 450px; width: 100%; border-radius: 24px; border: 5px solid white; box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+        #map { height: 500px; width: 100%; border-radius: 28px; border: 6px solid white; box-shadow: 0 15px 30px rgba(0,0,0,0.08); margin-bottom: 20px; }
 
-        footer {
-            margin-top: 40px; padding: 25px; background: white; border-radius: 20px;
-            display: flex; justify-content: space-between; align-items: center;
-            color: var(--text-dim); font-size: 0.85em; border: 1px solid #edf2f7;
-        }
-        .unl-badge { border-left: 4px solid var(--primary); padding-left: 15px; }
-
-        .btn-csv { background: #334155; color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; transition: 0.3s; }
-        .btn-csv:hover { background: var(--primary); }
+        .btn-csv { background: #334155; color: white; border: none; padding: 10px 18px; border-radius: 10px; cursor: pointer; font-size: 0.85em; font-weight: 600; }
     </style>
 </head>
 <body>
@@ -90,61 +84,50 @@
     <div id="login-overlay">
         <div class="login-box">
             <i class="fas fa-paw"></i>
-            <h2>Panel de Control</h2>
-            <p>Monitoreo Canino - UNL</p>
-            <input type="password" id="pass" placeholder="PIN de Acceso" autofocus>
-            <button class="btn-login" onclick="checkPass()">INICIAR SESIÓN</button>
+            <h2 style="margin:0;">FaunaGuard PRO</h2>
+            <p style="color:var(--text-dim); font-size: 0.9em; margin-bottom: 20px;">Acceso Biotelemetría UNL</p>
+            <input type="password" id="pass" placeholder="PIN" autofocus>
+            <button class="btn-login" onclick="checkPass()">ENTRAR</button>
+            
+            <div class="author-credits">
+                <strong>Investigador:</strong> Jorge Romero<br>
+                <strong>Contacto:</strong> jorge.romero@unl.edu.ec<br>
+                2026 • Universidad Nacional de Loja
+            </div>
         </div>
     </div>
 
     <header>
         <div>
-            <h1 style="margin:0;">FaunaGuard <span style="color: var(--primary);">UNL</span></h1>
-            <button class="btn-csv" onclick="exportData()"><i class="fas fa-file-medical"></i> GENERAR REPORTE MÉDICO</button>
+            <h1 style="margin:0; font-size: 1.8rem;">Monitor <span style="color: var(--primary);">En Vivo</span></h1>
+            <p style="margin:0; font-size: 0.8em; color: var(--text-dim);">ID: @unl_biotelemetria</p>
         </div>
-        <div style="text-align: right; color: var(--text-dim);">
-            <i class="fas fa-wifi"></i> <span id="sig-val">--</span> | 
-            <i class="fas fa-battery-three-quarters"></i> <span id="batt-val">--</span>
-        </div>
+        <button class="btn-csv" onclick="exportData()"><i class="fas fa-file-csv"></i> REPORTE</button>
     </header>
 
     <div class="dashboard">
         <div class="card card-bpm">
             <span class="label">Ritmo Cardiaco</span>
             <div class="val"><span id="bpm_val">--</span> <small style="font-size: 0.4em;">BPM</small></div>
-            <div style="font-size: 0.8em; color: var(--primary); font-weight: bold; z-index: 2;"><i class="fas fa-wave-square"></i> TIEMPO REAL</div>
             <div class="chart-wrapper">
                 <canvas id="pulseChart"></canvas>
             </div>
         </div>
 
         <div class="card">
-            <span class="label">Nivel de Actividad</span>
-            <div id="mov_texto" class="val" style="color: var(--primary); font-size: 2.2em;">--</div>
-            <div id="status-pill" style="font-weight: bold; color: var(--text-dim);"><i class="fas fa-dog"></i> Monitoreando...</div>
+            <span class="label">Actividad</span>
+            <div id="mov_texto" class="val" style="color: var(--primary);">--</div>
+            <div style="font-size: 0.8em; color: var(--text-dim);"><i class="fas fa-clock"></i> Actualizado</div>
         </div>
 
         <div class="card">
-            <span class="label">Última Ubicación</span>
-            <div id="coords" class="val" style="font-size: 1.4em;">-- , --</div>
-            <div id="sat_status" style="color: var(--primary); font-size: 0.75em; font-weight: bold;">
-                <i class="fas fa-satellite-dish"></i> GPS Sincronizado
-            </div>
+            <span class="label">GPS</span>
+            <div id="coords" class="val" style="font-size: 1.3em;">-- , --</div>
+            <div style="color: var(--primary); font-size: 0.75em; font-weight: bold;"><i class="fas fa-check-circle"></i> Sistema Online</div>
         </div>
     </div>
 
     <div id="map"></div>
-
-    <footer>
-        <div class="unl-badge">
-            <strong>ESTADO:</strong> SISTEMA CIFRADO <i class="fas fa-lock" style="color: var(--primary);"></i><br>
-            <strong>ID DISPOSITIVO:</strong> @unl_biotelemetria_2024
-        </div>
-        <div style="text-align: right;">
-            <strong>INVESTIGADOR:</strong> JORGE ROMERO<br>
-            UNIVERSIDAD NACIONAL DE LOJA
-        </div>
-    </footer>
 
     <script>
         let sessionLogs = []; 
@@ -153,7 +136,6 @@
         const aio_key = "aio_tvHs14vzX5YkVkOWA3TL2l13rwhs";
         const BASE_URL = `https://io.adafruit.com/api/v2/${username}/feeds/`;
 
-        // Enter para ingresar
         document.getElementById("pass").addEventListener("keypress", (e) => { if (e.key === "Enter") checkPass(); });
 
         function checkPass() {
@@ -187,7 +169,7 @@
             });
         }
 
-        var map = L.map('map').setView([-4.0284, -79.2072], 17);
+        var map = L.map('map', {zoomControl: false}).setView([-4.0284, -79.2072], 17);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
         var marker = L.marker([-4.0284, -79.2072]).addTo(map);
         var pathLine = L.polyline([], {color: '#10b981', weight: 4}).addTo(map);
@@ -200,9 +182,8 @@
         }
 
         async function update() {
-            const [lat, lng, bpm, bat, sig, act] = await Promise.all([
-                fetchLast("latitud"), fetchLast("longitud"), fetchLast("pulso"),
-                fetchLast("bateria"), fetchLast("senal"), fetchLast("actividad")
+            const [lat, lng, bpm, act] = await Promise.all([
+                fetchLast("latitud"), fetchLast("longitud"), fetchLast("pulso"), fetchLast("actividad")
             ]);
 
             if(bpm) {
@@ -226,34 +207,23 @@
                 pathLine.addLatLng([l1, l2]);
                 map.panTo([l1, l2]);
 
-                // Guardar en el log para el reporte
                 sessionLogs.push({
                     timestamp: new Date().toLocaleString(),
-                    lat: l1,
-                    lng: l2,
-                    bpm: bpm || "N/A",
-                    actividad: currentAct
+                    lat: l1, lng: l2, bpm: bpm || "N/A", actividad: currentAct
                 });
             }
-            
-            if(sig) document.getElementById('sig-val').innerText = sig + " dBm";
-            if(bat) document.getElementById('batt-val').innerText = bat + "%";
         }
 
         function exportData() {
-            if(sessionLogs.length === 0) { alert("Aún no hay datos registrados para exportar."); return; }
-            
-            let csv = "REPORTE DE MONITOREO BIOTELEMETRICO - UNL\n";
-            csv += "Fecha y Hora,Latitud,Longitud,Ritmo Cardiaco (BPM),Estado de Actividad\n";
-            
+            if(sessionLogs.length === 0) { alert("Sin datos."); return; }
+            let csv = "Fecha/Hora,Latitud,Longitud,BPM,Actividad\n";
             sessionLogs.forEach(log => {
                 csv += `${log.timestamp},${log.lat},${log.lng},${log.bpm},${log.actividad}\n`;
             });
-
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const blob = new Blob([csv], { type: 'text/csv' });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
-            link.setAttribute("download", `Reporte_FaunaGuard_${new Date().toLocaleDateString()}.csv`);
+            link.download = `Reporte_UNL_${new Date().toLocaleDateString()}.csv`;
             link.click();
         }
 
