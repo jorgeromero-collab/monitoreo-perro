@@ -9,6 +9,9 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
     <style>
         :root {
@@ -124,7 +127,7 @@
             <span class="label">Ubicación GPS</span>
             <div id="coords" class="val" style="font-size: 1.4em;">-- , --</div>
             <button onclick="exportData()" style="margin-top:20px; cursor:pointer; font-size:0.75em; background:#334155; color:white; border:none; padding:8px 15px; border-radius:8px;">
-                <i class="fas fa-download"></i> Descargar Informe
+                <i class="fas fa-file-pdf"></i> Descargar Informe PDF
             </button>
         </div>
     </div>
@@ -161,7 +164,6 @@
             });
         }
 
-        // MAPA ORIGINAL CON CAPA ESTÁNDAR
         var map = L.map('map').setView([-4.0284, -79.2072], 17);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
         var marker = L.marker([-4.0284, -79.2072]).addTo(map);
@@ -204,17 +206,66 @@
             if(bat) document.getElementById('batt-val').innerText = bat + "%";
         }
 
+        // NUEVA FUNCIÓN DE EXPORTACIÓN A PDF TÉCNICO
         function exportData() {
-            let csv = "Fecha,Latitud,Longitud,Pulso\n";
-            logs.forEach(l => csv += `${l.t},${l.lat},${l.lng},${l.bpm}\n`);
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url; a.download = 'Reporte_UNL.csv'; a.click();
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Encabezado
+            doc.setFillColor(16, 185, 129); // Verde Primary
+            doc.rect(0, 0, 210, 40, 'F');
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(22);
+            doc.setFont("helvetica", "bold");
+            doc.text("FAUNAGUARD PRO", 20, 25);
+            
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            doc.text("Reporte Técnico de Monitoreo Bio-Telemétrico", 20, 32);
+
+            // Información del Paciente (Perro)
+            doc.setTextColor(30, 41, 59);
+            doc.setFontSize(14);
+            doc.setFont("helvetica", "bold");
+            doc.text("Historial del Sujeto:", 20, 55);
+            
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            const infoSujeto = [
+                "Sujeto: Canino (Perro)",
+                "Estado: Monitoreo en Tiempo Real vía LTE",
+                "Responsables: Ing. J. Romero - Ing. G. Jimenez",
+                `Fecha del Reporte: ${new Date().toLocaleString()}`,
+                "Institución: Universidad Nacional de Loja"
+            ];
+            doc.text(infoSujeto, 20, 65);
+
+            // Tabla de historial de datos
+            doc.setFontSize(14);
+            doc.setFont("helvetica", "bold");
+            doc.text("Historial de Datos Registrados:", 20, 100);
+
+            const tableData = logs.map(l => [l.t, l.bpm + " BPM", l.lat.toFixed(5), l.lng.toFixed(5)]);
+            
+            doc.autoTable({
+                startY: 105,
+                head: [['Fecha / Hora', 'Pulsaciones', 'Latitud', 'Longitud']],
+                body: tableData,
+                theme: 'striped',
+                headStyles: { fillColor: [16, 185, 129] },
+                styles: { fontSize: 9 }
+            });
+
+            // Pie de página
+            doc.setFontSize(8);
+            doc.setTextColor(150);
+            doc.text("Este documento es un reporte automático generado por el sistema FaunaGuard PRO.", 20, 285);
+
+            doc.save('Reporte_Tecnico_FaunaGuard.pdf');
         }
 
-            setInterval(update, 10000);
+        setInterval(update, 10000);
     </script>
 </body>
 </html>
-
