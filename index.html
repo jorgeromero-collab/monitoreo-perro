@@ -13,7 +13,7 @@
     <style>
         :root {
             --primary: #10b981;
-            --bg: #f8fafc; /* Gris más claro como la imagen */
+            --bg: #f8fafc; 
             --card: #ffffff;
             --danger: #ef4444;
             --text-main: #0f172a;
@@ -47,15 +47,12 @@
         .btn-login { 
             background: var(--primary); color: white; border: none; padding: 14px; 
             border-radius: 12px; cursor: pointer; font-weight: 700; width: 100%; font-size: 1rem;
-            transition: transform 0.2s;
         }
-        .btn-login:active { transform: scale(0.98); }
 
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
 
         .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-bottom: 25px; }
         
-        /* Tarjetas con Sombra (como la imagen) */
         .card { 
             background: var(--card); 
             padding: 30px; 
@@ -65,7 +62,7 @@
             border: 1px solid rgba(226, 232, 240, 0.5);
         }
         
-        /* Círculo BPM Estilizado */
+        /* Gráficos y BPM */
         .bpm-container { position: relative; width: 180px; height: 180px; margin: 0 auto; }
         .circular-progress { transform: rotate(-90deg); width: 100%; height: 100%; }
         .circular-progress circle { fill: none; stroke-width: 10; stroke: #f1f5f9; }
@@ -73,7 +70,7 @@
             stroke: var(--danger) !important; 
             stroke-dasharray: 440; 
             stroke-dashoffset: 440; 
-            transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1); 
+            transition: stroke-dashoffset 1s ease; 
             stroke-linecap: round; 
         }
         
@@ -82,15 +79,17 @@
         
         @keyframes palpitar { 0% { transform: scale(1); } 15% { transform: scale(1.08); } 30% { transform: scale(1); } }
         
-        .wave-box { width: 100%; height: 70px; margin-top: 20px; }
+        .wave-box { width: 100%; height: 80px; margin-top: 20px; }
 
         .val { font-size: 2.8em; font-weight: 900; margin: 10px 0; letter-spacing: -1px; }
-        .label { color: var(--text-dim); text-transform: uppercase; font-size: 0.8em; font-weight: 800; letter-spacing: 1.5px; display: block; margin-bottom: 10px; }
+        .label { color: var(--text-dim); text-transform: uppercase; font-size: 0.8em; font-weight: 800; letter-spacing: 1.5px; display: block; }
 
+        /* Mapa PRO con Marco Blanco */
         #map { 
             height: 500px; width: 100%; border-radius: 32px; 
-            border: 8px solid white; 
+            border: 10px solid white; 
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); 
+            background: #e5e7eb; /* Color de carga antes del mapa */
         }
 
         footer {
@@ -106,21 +105,21 @@
     <div id="login-overlay">
         <div class="login-box">
             <i class="fas fa-paw"></i>
-            <h2 style="margin-top:0;">Panel de Control</h2>
-            <p style="color: var(--text-dim);">Proyecto de Monitoreo - UNL</p>
-            <input type="password" id="pass" placeholder="Ingresa tu PIN" autofocus>
-            <button class="btn-login" onclick="checkPass()">INICIAR SESIÓN</button>
+            <h2>Panel de Control</h2>
+            <p style="color: var(--text-dim);">FaunaGuard PRO - UNL</p>
+            <input type="password" id="pass" placeholder="PIN" autofocus>
+            <button class="btn-login" onclick="checkPass()">ENTRAR</button>
         </div>
     </div>
 
     <header>
         <div>
             <h1 style="margin:0; font-size: 1.8rem;">FaunaGuard <span style="color: var(--primary);">PRO</span></h1>
-            <div style="color: var(--text-dim); font-size: 0.85rem; font-weight: 600;">SISTEMA DE MONITOREO DE ANIMALES</div>
+            <div style="color: var(--text-dim); font-size: 0.85rem; font-weight: 600;">MONITOREO BIO-TELEMÉTRICO</div>
         </div>
-        <div style="text-align: right; background: white; padding: 10px 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
-            <i class="fas fa-signal" style="color: var(--primary);"></i> LTE <span id="sig-val" style="color: var(--text-main);">--</span> | 
-            <i class="fas fa-battery-three-quarters" style="color: var(--primary);"></i> <span id="batt-val" style="color: var(--text-main);">--%</span>
+        <div style="text-align: right; background: white; padding: 12px 25px; border-radius: 18px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; gap: 20px;">
+            <div><i class="fas fa-signal" style="color: var(--primary);"></i> <span id="sig-val">--</span></div>
+            <div><i class="fas fa-battery-three-quarters" style="color: var(--primary);"></i> <span id="batt-val">--%</span></div>
         </div>
     </header>
 
@@ -137,32 +136,27 @@
                     <div style="font-size: 0.8rem; color: var(--text-dim); font-weight: 700;">BPM</div>
                 </div>
             </div>
-            <div class="wave-box">
-                <canvas id="ecgChart"></canvas>
-            </div>
+            <div class="wave-box"><canvas id="ecgChart"></canvas></div>
         </div>
 
         <div class="card">
             <span class="label">Estado de Actividad</span>
             <div id="mov_texto" class="val" style="color: var(--primary); margin-top: 50px;">--</div>
-            <div style="margin-top: 15px; padding: 8px; background: #f1f5f9; border-radius: 10px; font-size: 0.8em; font-weight: 700; color: var(--text-dim);">ANÁLISIS EN VIVO</div>
+            <div style="margin-top: 20px; padding: 10px; background: #f1f5f9; border-radius: 12px; font-size: 0.8em; font-weight: 700; color: var(--text-dim);">ACTIVO AHORA</div>
         </div>
 
         <div class="card">
             <span class="label">Ubicación GPS</span>
             <div id="coords" class="val" style="font-size: 1.6em; margin-top: 50px;">-- , --</div>
-            <div style="color: var(--primary); font-size: 0.8em; font-weight: 800; margin-top: 20px;">
-                <i class="fas fa-check-circle"></i> Satélites Sincronizados
-            </div>
-            <button onclick="exportData()" style="margin-top:20px; cursor:pointer; font-size:0.75em; background:var(--text-main); color:white; border:none; padding:10px 15px; border-radius:10px; width: 100%; font-weight: 700;">
-                <i class="fas fa-file-download"></i> EXPORTAR LOGS
+            <button onclick="exportData()" style="margin-top:40px; cursor:pointer; font-size:0.8em; background:var(--text-main); color:white; border:none; padding:12px; border-radius:12px; width: 100%; font-weight: 700;">
+                DESCARGAR INFORME CSV
             </button>
         </div>
     </div>
 
     <div id="map"></div>
 
-    <footer class="footer-minimal">
+    <footer>
         Jorge Romero | 2026<br>
         jorge.romero@unl.edu.ec<br>
         Universidad Nacional de Loja
@@ -171,16 +165,21 @@
     <script>
         let logs = [];
         let ecgLine;
-        const username = "JorgeUNL";
         const aio_key = "aio_tvHs14vzX5YkVkOWA3TL2l13rwhs";
-        const BASE_URL = `https://io.adafruit.com/api/v2/${username}/feeds/`;
+        const BASE_URL = `https://io.adafruit.com/api/v2/JorgeUNL/feeds/`;
 
-        document.getElementById("pass").addEventListener("keypress", (e) => { if (e.key === "Enter") checkPass(); });
+        // Inicializar Mapa con corrección de carga
+        var map = L.map('map', { zoomControl: false }).setView([-4.0284, -79.2072], 17);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+        var marker = L.marker([-4.0284, -79.2072]).addTo(map);
 
         function checkPass() {
             if(document.getElementById('pass').value === 'UNL2024') {
                 document.getElementById('login-overlay').style.display = 'none';
-                initCharts(); update();
+                initCharts(); 
+                update();
+                // Forzar refresco del mapa al entrar
+                setTimeout(() => { map.invalidateSize(); }, 500);
             } else { alert('PIN Incorrecto'); }
         }
 
@@ -190,29 +189,11 @@
                 type: 'line',
                 data: { 
                     labels: Array(15).fill(''), 
-                    datasets: [{ 
-                        data: Array(15).fill(80), 
-                        borderColor: '#ef4444', 
-                        borderWidth: 4, 
-                        pointRadius: 0, 
-                        fill: false, 
-                        tension: 0.4 
-                    }] 
+                    datasets: [{ data: Array(15).fill(80), borderColor: '#ef4444', borderWidth: 4, pointRadius: 0, fill: false, tension: 0.4 }] 
                 },
-                options: { 
-                    maintainAspectRatio: false, 
-                    plugins: { legend: { display: false } }, 
-                    scales: { 
-                        x: { display: false }, 
-                        y: { display: false, min: 40, max: 180 } 
-                    }
-                }
+                options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false, min: 40, max: 180 } } }
             });
         }
-
-        var map = L.map('map', { zoomControl: false }).setView([-4.0284, -79.2072], 17);
-        L.tileLayer('https://{s}.tile.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
-        var marker = L.marker([-4.0284, -79.2072]).addTo(map);
 
         async function fetchLast(feed) {
             try {
@@ -231,7 +212,6 @@
                 const v = parseInt(bpm);
                 document.getElementById('bpm_val').innerText = v;
                 document.getElementById('bar').style.strokeDashoffset = 440 - (v * 440 / 180);
-                document.getElementById('bpm_val').style.animationDuration = (60/v) + "s";
                 ecgLine.data.datasets[0].data.push(v);
                 ecgLine.data.datasets[0].data.shift();
                 ecgLine.update('none');
@@ -259,7 +239,7 @@
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url; a.download = 'Reporte_UNL.csv'; a.click();
+            a.href = url; a.download = 'Reporte_FaunaGuard.csv'; a.click();
         }
 
         setInterval(update, 10000);
