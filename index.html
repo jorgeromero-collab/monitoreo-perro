@@ -26,7 +26,6 @@
 
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text-main); margin: 0; padding: 20px; }
 
-        /* Pantalla de Inicio */
         #login-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center;
@@ -35,7 +34,6 @@
             background: var(--card); padding: 50px; border-radius: 30px; text-align: center;
             box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 320px;
         }
-        /* LOGO DE LA PATA EN VERDE */
         .logo-pata { color: var(--primary); font-size: 4rem; margin-bottom: 15px; }
 
         input { 
@@ -52,7 +50,6 @@
         .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 20px; }
         .card { background: var(--card); padding: 25px; border-radius: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); text-align: center; }
         
-        /* Círculo BPM */
         .bpm-container { position: relative; width: 160px; height: 160px; margin: 0 auto; }
         .circular-progress { transform: rotate(-90deg); width: 100%; height: 100%; }
         .circular-progress circle { fill: none; stroke-width: 8; stroke: #f1f5f9; }
@@ -67,10 +64,8 @@
         .val { font-size: 2.5em; font-weight: 800; margin: 5px 0; }
         .label { color: var(--text-dim); text-transform: uppercase; font-size: 0.75em; font-weight: 700; letter-spacing: 1px; }
 
-        /* MAPA ORIGINAL (EL QUE TE GUSTABA) */
         #map { height: 450px; width: 100%; border-radius: 24px; border: 5px solid white; box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
 
-        /* CRÉDITOS SEGÚN TU SEGUNDA FOTO */
         .footer-pro {
             margin-top: 40px; padding: 25px; text-align: center;
             color: var(--plomo); font-size: 0.9em; border-top: 1px solid #e2e8f0;
@@ -206,63 +201,83 @@
             if(bat) document.getElementById('batt-val').innerText = bat + "%";
         }
 
-        // NUEVA FUNCIÓN DE EXPORTACIÓN A PDF TÉCNICO
+        // FUNCION DE EXPORTACIÓN CON LOGO E HISTORIAL
         function exportData() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             
-            // Encabezado
-            doc.setFillColor(16, 185, 129); // Verde Primary
-            doc.rect(0, 0, 210, 40, 'F');
+            // LOGO (Imagen convertida a código para el PDF)
+            // He dibujado el logo usando formas y texto para que no dependa de un archivo externo y siempre cargue
+            doc.setFillColor(16, 185, 129); // Verde Pata
+            doc.circle(25, 20, 2, 'F'); doc.circle(30, 17, 2, 'F'); doc.circle(36, 17, 2, 'F'); doc.circle(41, 20, 2, 'F');
+            doc.ellipse(33, 25, 6, 4, 'F'); // Almohadilla central
             
-            doc.setTextColor(255, 255, 255);
+            doc.setTextColor(30, 41, 59); // Color FaunaGuard (Oscuro)
             doc.setFontSize(22);
             doc.setFont("helvetica", "bold");
-            doc.text("FAUNAGUARD PRO", 20, 25);
+            doc.text("FaunaGuard", 43, 26);
             
-            doc.setFontSize(10);
+            doc.setTextColor(16, 185, 129); // Color PRO (Verde)
+            doc.text("PRO", 92, 26);
+            
+            doc.setTextColor(100, 116, 139); // Color Subtitulo (Gris)
+            doc.setFontSize(9);
             doc.setFont("helvetica", "normal");
-            doc.text("Reporte Técnico de Monitoreo Bio-Telemétrico", 20, 32);
+            doc.text("SISTEMA DE MONITOREO DE ANIMALES", 44, 31);
 
-            // Información del Paciente (Perro)
+            // Línea divisoria
+            doc.setDrawColor(226, 232, 240);
+            doc.line(20, 38, 190, 38);
+
+            // Título del Reporte e Información del Perro (Historial)
             doc.setTextColor(30, 41, 59);
             doc.setFontSize(14);
             doc.setFont("helvetica", "bold");
-            doc.text("Historial del Sujeto:", 20, 55);
+            doc.text("REPORTE TÉCNICO BIO-TELEMÉTRICO", 20, 50);
             
             doc.setFontSize(10);
+            doc.text("Historial y Datos del Sujeto:", 20, 60);
+            
             doc.setFont("helvetica", "normal");
-            const infoSujeto = [
-                "Sujeto: Canino (Perro)",
-                "Estado: Monitoreo en Tiempo Real vía LTE",
-                "Responsables: Ing. J. Romero - Ing. G. Jimenez",
-                `Fecha del Reporte: ${new Date().toLocaleString()}`,
-                "Institución: Universidad Nacional de Loja"
+            const historial = [
+                "Especie: Canino (Perro)",
+                "Protocolo de Monitoreo: Frecuencia Cardíaca y Posicionamiento GPS vía LTE",
+                `Fecha del Registro: ${new Date().toLocaleDateString()}`,
+                `Hora de Generación: ${new Date().toLocaleTimeString()}`,
+                "Ubicación del Servidor: Adafruit IO Cloud",
+                "Responsables del Proyecto: Ing. Jorge Romero - Ing. Guadalupe Jimenez"
             ];
-            doc.text(infoSujeto, 20, 65);
+            doc.text(historial, 25, 68);
 
             // Tabla de historial de datos
-            doc.setFontSize(14);
             doc.setFont("helvetica", "bold");
-            doc.text("Historial de Datos Registrados:", 20, 100);
+            doc.text("Registro Detallado de Telemetría:", 20, 105);
 
-            const tableData = logs.map(l => [l.t, l.bpm + " BPM", l.lat.toFixed(5), l.lng.toFixed(5)]);
+            const tableData = logs.map(l => [
+                l.t, 
+                l.bpm + " BPM", 
+                l.lat.toFixed(5), 
+                l.lng.toFixed(5)
+            ]);
             
             doc.autoTable({
-                startY: 105,
+                startY: 110,
                 head: [['Fecha / Hora', 'Pulsaciones', 'Latitud', 'Longitud']],
                 body: tableData,
                 theme: 'striped',
-                headStyles: { fillColor: [16, 185, 129] },
+                headStyles: { fillColor: [16, 185, 129] }, // Verde UNL
                 styles: { fontSize: 9 }
             });
 
-            // Pie de página
-            doc.setFontSize(8);
-            doc.setTextColor(150);
-            doc.text("Este documento es un reporte automático generado por el sistema FaunaGuard PRO.", 20, 285);
+            // Créditos finales (Igual que el footer)
+            const finalY = doc.lastAutoTable.finalY + 20;
+            doc.setFontSize(9);
+            doc.setFont("helvetica", "italic");
+            doc.setTextColor(148, 163, 184);
+            doc.text("Universidad Nacional de Loja - Ciclo 7mo", 20, finalY);
+            doc.text("Facultad de la Energía, las Industrias y los Recursos Naturales No Renovables", 20, finalY + 5);
 
-            doc.save('Reporte_Tecnico_FaunaGuard.pdf');
+            doc.save('Reporte_FaunaGuard_PRO.pdf');
         }
 
         setInterval(update, 10000);
